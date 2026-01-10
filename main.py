@@ -2,6 +2,8 @@ from pathlib import Path
 from app.pdf.loader import load_pdfs
 from app.pdf.parser import extract_text
 from app.processing.extractor import extract_fields
+from app.processing.normalizer import normalize_records
+import pandas as pd
 
 from app.utils import logger
 from app.utils.logger import setup_logger
@@ -40,6 +42,12 @@ def main():
     extracted_records = extract_fields(parsed_pdfs)
 
     logger.info(f"Extracted structured data for {len(extracted_records)} invoices")
+
+    normalized_records = normalize_records(extracted_records)
+    df = pd.DataFrame(normalized_records)
+    logger.info(f"DataFrame created with {len(df)} rows")
+    logger.info(f"\n{df.head()}")
+
 
 
 if __name__ == "__main__":
