@@ -1,5 +1,6 @@
 from pathlib import Path
 from app.pdf.loader import load_pdfs
+from app.pdf.parser import extract_text
 
 from app.utils import logger
 from app.utils.logger import setup_logger
@@ -27,6 +28,13 @@ def main():
     
     loaded_pdfs = load_pdfs(Settings.INPUT_PDF_DIR)
     logger.info(f"Successfully loaded {len(loaded_pdfs)} PDFs")
+    
+    parsed_pdfs = extract_text(loaded_pdfs)
+
+    for pdf in parsed_pdfs:
+        logger.info(
+            f"{pdf['path'].name} extracted {len(pdf['pages'])} pages of text"
+        )
 
 
 
