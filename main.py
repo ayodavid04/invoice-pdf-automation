@@ -1,6 +1,7 @@
 from pathlib import Path
 from app.pdf.loader import load_pdfs
 from app.pdf.parser import extract_text
+from app.processing.extractor import extract_fields
 
 from app.utils import logger
 from app.utils.logger import setup_logger
@@ -36,6 +37,9 @@ def main():
             f"{pdf['path'].name} extracted {len(pdf['pages'])} pages of text"
         )
 
+    extracted_records = extract_fields(parsed_pdfs)
+
+    logger.info(f"Extracted structured data for {len(extracted_records)} invoices")
 
 
 if __name__ == "__main__":
