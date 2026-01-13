@@ -5,11 +5,20 @@ from app.config.settings import Settings
 logger = setup_logger(Settings.LOG_LEVEL)
 
 
+DATE_FORMATS = [
+    "%d/%m/%Y",
+    "%Y-%m-%d",
+    "%m/%d/%Y",
+    "%b %d, %Y",
+    "%B %d, %Y",
+]
+
+
 def parse_float(value):
     if value is None:
         return None
     try:
-        return float(value.replace(",", ""))
+        return float(value.replace(",", "").replace("$", "").strip())
     except Exception:
         logger.warning(f"Failed to parse float: {value}")
         return None
@@ -19,9 +28,9 @@ def parse_date(value):
     if value is None:
         return None
 
-    for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%m/%d/%Y"):
+    for fmt in DATE_FORMATS:
         try:
-            return datetime.strptime(value, fmt).date()
+            return datetime.strptime(value.strip(), fmt).date()
         except ValueError:
             continue
 
@@ -34,13 +43,31 @@ def normalize_records(records):
 
     for record in records:
         clean = {
-            "source_file": record["source_file"],
-            "invoice_number": record["invoice_number"],
-            "invoice_date": parse_date(record["invoice_date"]),
-            "client_name": record["client_name"],
-            "subtotal": parse_float(record["subtotal"]),
-            "tax": parse_float(record["tax"]),
-            "total": parse_float(record["total"]),
+            "source_file": record.get("source_file"),
+
+            "invoice_number": record.get("invoice_number"),
+            "invoice_number_confidence": record.get("invoice_number_confidence"),
+
+            "po_number": record.get("po_number"),
+            "po_number_confidence": record.get("po_number_confidence"),
+
+            "invoice_date": parse_date(record.get("invoice_date")),
+            "invoice_date_confidence": record.get("invoice_date_confidence"),
+
+            "due_date": parse_date(record.get("due_date")),
+            "due_date_confidence": record.get("due_date_confidence"),
+
+            "client_name": record.get("client_name"),
+            "client_name_confidence": record.get("client_name_confidence"),
+
+            "subtotal": parse_float(record.get("subtotal")),
+            "subtotal_confidence": record.get("subtotal_confidence"),
+
+            "tax": parse_float(record.get("tax")),
+            "tax_confidence": record.get("tax_confidence"),
+
+            "total": parse_float(record.get("total")),
+            "total_confidence": record.get("total_confidence"),
         }
 
         normalized.append(clean)

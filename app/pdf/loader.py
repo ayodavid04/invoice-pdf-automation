@@ -1,28 +1,24 @@
 from pathlib import Path
-from pypdf import PdfReader
+from PyPDF2 import PdfReader
 from app.utils.logger import setup_logger
 from app.config.settings import Settings
 
 logger = setup_logger(Settings.LOG_LEVEL)
 
 
-def load_pdfs(pdf_dir: Path):
-    pdf_files = list(pdf_dir.glob("*.pdf"))
-    loaded = []
+def load_pdfs(input_dir: Path):
+    pdfs = []
 
-    for pdf_path in pdf_files:
+    for pdf_path in input_dir.glob("*.pdf"):
         try:
             reader = PdfReader(pdf_path)
-            page_count = len(reader.pages)
-
-            logger.info(f"Loaded {pdf_path.name} ({page_count} pages)")
-            loaded.append({
+            pdfs.append({
                 "path": pdf_path,
-                "reader": reader,
-                "pages": page_count
+                "reader": reader
             })
+            logger.info(f"Loaded PDF: {pdf_path.name}")
 
         except Exception as e:
-            logger.error(f"Failed to load {pdf_path.name}: {e}")
+            logger.error(f"Failed loading {pdf_path.name}: {e}")
 
-    return loaded
+    return pdfs

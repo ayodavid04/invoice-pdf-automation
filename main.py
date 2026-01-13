@@ -5,7 +5,9 @@ from app.processing.extractor import extract_fields
 from app.processing.normalizer import normalize_records
 import pandas as pd
 
-from app.utils import logger
+from app.output.csv_writer import write_csv
+from app.output.excel_writer import write_excel
+
 from app.utils.logger import setup_logger
 from app.config.settings import Settings
 
