@@ -5,8 +5,16 @@ from app.processing.validator import apply_fallbacks
 
 
 def run_pipeline(input_dir):
+    # Step 1 — Load PDFs
     pdfs = load_pdfs(input_dir)
-    parsed = extract_text(pdfs)
-    extracted = extract_fields(parsed)
-    validated = apply_fallbacks(extracted)
-    return validated
+
+    # Step 2 — Extract raw text from PDFs
+    parsed_pdfs = extract_text(pdfs)
+
+    # Step 3 — Extract structured fields
+    extracted_records = extract_fields(parsed_pdfs)
+
+    # Step 4 — Apply fallback validation rules
+    validated_records = apply_fallbacks(extracted_records)
+
+    return validated_records
