@@ -7,7 +7,6 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 
 load_dotenv(BASE_DIR / ".env")
 
-DATABASE_URL = "postgresql://neondb_owner:npg_PZuUaFH72NtW@ep-solitary-mud-abwxdhpt-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 class Settings:
     
