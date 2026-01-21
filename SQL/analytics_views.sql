@@ -7,7 +7,7 @@ SELECT
     MIN(invoice_date)           AS first_invoice_date,
     MAX(invoice_date)           AS last_invoice_date
 FROM invoices;
-----------------------------------------------------------------
+
 CREATE OR REPLACE VIEW v_monthly_invoice_performance AS
 SELECT
     DATE_TRUNC('month', invoice_date) AS month,
@@ -17,7 +17,6 @@ SELECT
 FROM invoices
 GROUP BY 1
 ORDER BY 1;
-----------------------------------------------------------------
 
 CREATE OR REPLACE VIEW v_client_revenue AS
 SELECT
