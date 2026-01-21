@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from app.utils.logger import setup_logger
+from app.utils.logger import get_logger
 from app.config.settings import Settings
 
 CURRENCY_REGEX = r"\$([\d,]+\.\d{2})"
@@ -67,45 +67,23 @@ def extract_fields(text: str) -> dict:
 
     return record
 
-logger = setup_logger(Settings.LOG_LEVEL)
+from app.utils.logger import get_logger
+
+logger = get_logger()
 
 
 def extract_text(loaded_pdfs):
-    """
-    Takes loaded PDFs and extracts text from each page.
-    Returns:
-        [
-            {
-                "path": Path,
-                "pages": [str, str, ...]
-            }
-        ]
-    """
     extracted = []
 
     for pdf in loaded_pdfs:
-        text_pages = []
+        pages = []
 
-        for idx, page in enumerate(pdf["reader"].pages):
-            try:
-                text = page.extract_text() or ""
-                logger.info(
-                    f"Extracted text from {pdf['path'].name} page {idx + 1}"
-                )
-                text_pages.append(text)
-
-            except Exception as e:
-                logger.error(
-                    f"Failed extracting page {idx + 1} from {pdf['path'].name}: {e}"
-                )
+        for page in pdf["reader"].pages:
+            pages.append(page.extract_text() or "")
 
         extracted.append({
             "path": pdf["path"],
-            "pages": text_pages,
+            "pages": pages,
         })
-
-        logger.info(
-            f"{pdf['path'].name} extracted {len(text_pages)} pages of text"
-        )
 
     return extracted

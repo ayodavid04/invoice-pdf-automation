@@ -1,8 +1,8 @@
 import re
-from app.utils.logger import setup_logger
+from app.utils.logger import get_logger
 from app.config.settings import Settings
 
-logger = setup_logger(Settings.LOG_LEVEL)
+logger = get_logger()
 
 MONEY = r"\$?\s*([\d,]+\.\d{2})"
 

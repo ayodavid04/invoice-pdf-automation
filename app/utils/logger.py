@@ -1,29 +1,35 @@
 import logging
 from pathlib import Path
 
+LOG_DIR = Path("logs")
+LOG_DIR.mkdir(exist_ok=True)
 
-def setup_logger(log_level: str = "INFO") -> logging.Logger:
-    logs_dir = Path("logs")
-    logs_dir.mkdir(exist_ok=True)
+LOG_FILE = LOG_DIR / "invoice_automation.log"
 
-    logger = logging.getLogger("invoice_automation")
-    logger.setLevel(log_level)
+
+def get_logger(name: str = "invoice_automation") -> logging.Logger:
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+
+    if logger.handlers:
+        return logger  # Prevent duplicate handlers
 
     formatter = logging.Formatter(
         "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
     )
 
-    # Console handler
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
 
-    # File handler
-    file_handler = logging.FileHandler(logs_dir / "app.log")
+    file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
     file_handler.setFormatter(formatter)
 
-    # Prevent duplicate handlers on reload
-    if not logger.handlers:
-        logger.addHandler(console_handler)
-        logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
 
     return logger
+
+
+# 🔒 BACKWARD-COMPATIBILITY ALIAS
+def setup_logger(level: str = "INFO"):
+    return get_logger()

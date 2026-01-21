@@ -1,78 +1,66 @@
 import re
-from app.utils.logger import setup_logger
-from app.config.settings import Settings
+from app.utils.logger import get_logger
 
-logger = setup_logger(Settings.LOG_LEVEL)
+logger = get_logger()
 
-DATE_FALLBACK_REGEX = r"([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4})"
-CURRENCY_REGEX = r"\$([\d,]+\.\d{2})"
+CURRENCY_REGEX = r"\$?([\d,]+\.\d{2})"
+
+
+def _to_float(value):
+    try:
+        return float(value.replace(",", ""))
+    except Exception:
+        return None
 
 
 def apply_fallbacks(records: list[dict]) -> list[dict]:
-    """
-    Applies fallback extraction logic when primary extraction failed.
-    Safe against missing keys and undefined variables.
-    """
+    validated = []
 
     for record in records:
         text = record.get("full_text", "")
 
-        if not text:
-            logger.warning(
-                f"{record.get('source_file')} -> No full_text available for fallback"
-            )
-            continue
+        # -------- Subtotal --------
+        if not record.get("subtotal"):
+            m = re.search(r"subtotal\s*[:\-]?\s*\$?([\d,]+\.\d{2})", text, re.I)
+            if m:
+                record["subtotal"] = m.group(1)
 
-        # -----------------------
-        # DATE FALLBACK
-        # -----------------------
-        if not record.get("invoice_date") or not record.get("due_date"):
-            dates = re.findall(DATE_FALLBACK_REGEX, text)
+        # -------- Tax --------
+        if not record.get("tax"):
+            m = re.search(r"tax\s*[:\-]?\s*\$?([\d,]+\.\d{2})", text, re.I)
+            if m:
+                record["tax"] = m.group(1)
 
-            if len(dates) >= 1 and not record.get("invoice_date"):
-                record["invoice_date"] = dates[0]
-                record["invoice_date_confidence"] = "FALLBACK"
-                logger.info(
-                    f"{record['source_file']} -> inferred invoice_date: {dates[0]}"
-                )
+        # -------- Total (extract ONLY) --------
+        if not record.get("total"):
+            m = re.search(r"total\s*[:\-]?\s*\$?([\d,]+\.\d{2})", text, re.I)
+            if m:
+                record["total"] = m.group(1)
 
-            if len(dates) >= 2 and not record.get("due_date"):
-                record["due_date"] = dates[1]
-                record["due_date_confidence"] = "FALLBACK"
-                logger.info(
-                    f"{record['source_file']} -> inferred due_date: {dates[1]}"
-                )
-
-        # -----------------------
-        # MONEY FALLBACK
-        # -----------------------
-        missing_money = any(
-            not record.get(k) for k in ("subtotal", "tax", "total")
-        )
-
-        if missing_money:
+        # -------- Currency inference (last resort) --------
+        missing = any(not record.get(k) for k in ("subtotal", "tax", "total"))
+        if missing:
             values = re.findall(CURRENCY_REGEX, text)
-            values = [float(v.replace(",", "")) for v in values]
-
             if len(values) >= 3:
-                # Heuristic: last 3 money values usually subtotal / tax / total
-                subtotal, tax, total = values[-3], values[-2], values[-1]
+                record.setdefault("subtotal", values[-3])
+                record.setdefault("tax", values[-2])
+                record.setdefault("total", values[-1])
+                logger.info(f"{record.get('source_file')} -> inferred monetary values")
 
-                record.setdefault("subtotal", f"{subtotal:.2f}")
-                record.setdefault("tax", f"{tax:.2f}")
-                record.setdefault("total", f"{total:.2f}")
+        # -------- Correct total ONLY if missing --------
+        subtotal = _to_float(record.get("subtotal"))
+        tax = _to_float(record.get("tax"))
 
-                record.setdefault("subtotal_confidence", "FALLBACK")
-                record.setdefault("tax_confidence", "FALLBACK")
-                record.setdefault("total_confidence", "FALLBACK")
+        if record.get("total") is None and subtotal is not None and tax is not None:
+            calculated = round(subtotal + tax, 2)
+            record["total"] = f"{calculated:.2f}"
+            logger.info(
+                f"{record.get('source_file')} -> total computed "
+                f"({record['subtotal']} + {record['tax']} = {record['total']})"
+            )
 
-                logger.info(
-                    f"{record['source_file']} -> inferred monetary values"
-                )
-
-        # -----------------------
-        # CLEANUP
-        # -----------------------
+        # -------- Cleanup --------
         record.pop("full_text", None)
+        validated.append(record)
 
-    return records
+    return validated

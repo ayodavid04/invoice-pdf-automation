@@ -7,8 +7,15 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 
 load_dotenv(BASE_DIR / ".env")
 
+DATABASE_URL = "postgresql://neondb_owner:npg_PZuUaFH72NtW@ep-solitary-mud-abwxdhpt-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 class Settings:
+    
+    DATABASE_URL = os.getenv(
+        "DATABASE_URL",
+        "postgresql://neondb_owner:npg_PZuUaFH72NtW@ep-solitary-mud-abwxdhpt-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    )
+
     INPUT_PDF_DIR = Path(os.getenv("INPUT_PDF_DIR", BASE_DIR / "data/input_pdfs"))
     OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", BASE_DIR / "data/output"))
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
