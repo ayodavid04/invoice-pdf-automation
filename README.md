@@ -1,3 +1,4 @@
+<img width="1280" height="724" alt="Screenshot 2026-01-22 173112" src="https://github.com/user-attachments/assets/65fe07a1-0bc4-46ce-bc32-dd936051ff3b" />
 # Client Invoice PDF Automation & Analytics Pipeline
 
 ## Overview
